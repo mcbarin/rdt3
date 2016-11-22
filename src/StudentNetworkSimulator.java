@@ -1,3 +1,5 @@
+import java.nio.charset.StandardCharsets;
+
 // ***************** COMP/ELEC416 - Project 2  **********************************
 //	Student Network Simulator code.
 //  You need to implement the functions as described in the project document.
@@ -83,7 +85,29 @@ public class StudentNetworkSimulator extends NetworkSimulator
      *          returns the Packet's payload
      *
      */
-
+	
+	public int checkSum(String message){
+		int checksum=0;
+		byte[] bitsOfMessage = message.getBytes(StandardCharsets.UTF_8);
+		for(int i=0; i<bitsOfMessage.length;i++){
+			if (bitsOfMessage[i] == 1){
+				checksum++;
+			}
+		}
+		return checksum;
+	}
+	
+	public boolean checkCorruption(Packet p){
+		byte[] bitsOfMessage = p.getPayload().getBytes(StandardCharsets.UTF_8);
+		int calculatedChecksum = 0;
+		for(int i=0;i<bitsOfMessage.length;i++){
+			if(bitsOfMessage[i]==1){
+				calculatedChecksum++;
+			}
+		}
+		return calculatedChecksum == p.getChecksum();
+	}
+	
     // Add any necessary class variables here.  Remember, you cannot use
     // these variables to send messages error free!  They can only hold
     // state information for A or B.
@@ -106,6 +130,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // the receiving upper layer.
     protected void aOutput(Message message)
     {
+    	System.out.println("Message received");
     }
     
     // This routine will be called whenever a packet sent from the B-side 
@@ -130,6 +155,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // of entity A).
     protected void aInit()
     {
+    	int lastACK = 0;
     }
     
     // This routine will be called whenever a packet sent from the B-side 
@@ -138,6 +164,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // sent from the A-side.
     protected void bInput(Packet packet)
     {
+    	
     }
     
     // This routine will be called once, before any of your other B-side 
