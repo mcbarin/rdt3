@@ -59,7 +59,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
      *          ack field of "ack", a checksum field of "check", and a
      *          payload of "newPayload"
      *      Packet (int seq, int ack, int check)
-     *          chreate a new Packet with a sequence field of "seq", an
+     *          create a new Packet with a sequence field of "seq", an
      *          ack field of "ack", a checksum field of "check", and
      *          an empty payload
      *    Methods:
@@ -86,9 +86,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
      *
      */
 	
-	public int checkSum(String message){
+	public int checkSum(Message message){
 		int checksum=0;
-		byte[] bitsOfMessage = message.getBytes(StandardCharsets.UTF_8);
+		byte[] bitsOfMessage = message.getData().getBytes(StandardCharsets.UTF_8);
 		for(int i=0; i<bitsOfMessage.length;i++){
 			if (bitsOfMessage[i] == 1){
 				checksum++;
@@ -107,6 +107,16 @@ public class StudentNetworkSimulator extends NetworkSimulator
 		}
 		return calculatedChecksum == p.getChecksum();
 	}
+	
+	// For Sender A
+	int sequenceNumberA;
+	int lastReceivedACK;
+	int defaultACKForSender = 0;
+	Packet lastPacketSent;
+	
+	// For Receiver B
+	int lastSentACK;
+	int sequenceNumberB;
 	
     // Add any necessary class variables here.  Remember, you cannot use
     // these variables to send messages error free!  They can only hold
@@ -130,7 +140,14 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // the receiving upper layer.
     protected void aOutput(Message message)
     {
-    	System.out.println("Message received");
+    	// First create a packet for this message.
+    	int checksum = checkSum(message);
+    	Packet p = new Packet(sequenceNumberA, defaultACKForSender, checksum, message.getData());
+    	lastPacketSent = p;
+    	
+    	// Send packet to the network and start timer in case of a packet lost.
+    	toLayer3(A, p);
+    	startTimer(A, TIMERINTERRUPT);
     }
     
     // This routine will be called whenever a packet sent from the B-side 
@@ -147,6 +164,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // for how the timer is started and stopped. 
     protected void aTimerInterrupt()
     {
+    	// Send the last packet again and start timer.
+    	toLayer3(A,lastPacketSent);
+    	startTimer(A, TIMERINTERRUPT);
     }
     
     // This routine will be called once, before any of your other A-side 
@@ -155,7 +175,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // of entity A).
     protected void aInit()
     {
-    	int lastACK = 0;
+    	sequenceNumberA = 0; // next packet number to send
+    	lastReceivedACK = -1; // last ACK received from receiver
+    	
     }
     
     // This routine will be called whenever a packet sent from the B-side 
@@ -164,7 +186,6 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // sent from the A-side.
     protected void bInput(Packet packet)
     {
-    	
     }
     
     // This routine will be called once, before any of your other B-side 
@@ -173,6 +194,8 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // of entity B).
     protected void bInit()
     {
+    	sequenceNumberB = 0; // waiting for this packet
+    	lastSentACK = -1; // Last successfully received packet's number.
     }
 }
 
