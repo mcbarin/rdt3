@@ -1,6 +1,4 @@
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.Queue;
 
 // ***************** COMP/ELEC416 - Project 2  **********************************
 //	Student Network Simulator code.
@@ -141,16 +139,16 @@ public class StudentNetworkSimulator extends NetworkSimulator
     		int packetNumber = stateA/2; // 0 -> 0 , 2 -> 1
 	    	int checksum = calculateCheckum(message.getData(),packetNumber,packetNumber);
 	    	Packet p = new Packet(packetNumber, packetNumber, checksum, message.getData());
-	    	lastPacketSent = p;
+	    	lastPacketSent = new Packet(p);
 	    	
 	    	// Send packet to the network and start timer in case of a packet lost.
+	    	System.out.println("A: Packet #" + ""+packetNumber +  " Sending.\n Data: " + message.getData());
 	    	toLayer3(A, p);
 	    	startTimer(A, 100.0);
 	    	stateA++;
-	    	System.out.println("Packet #" + ""+packetNumber +  " Sent.\n Data: " + message.getData());
     	}else{
     		// Waiting for ACK.
-    		System.out.println("Waiting for ACK from receiver");
+    		System.out.println("A: Waiting for ACK from receiver");
     	}
     }
     
@@ -163,28 +161,28 @@ public class StudentNetworkSimulator extends NetworkSimulator
     	// Packet received from receiver.
     	if(stateA == 1){ // Waiting for ACK state
     		if(!isCorrupted(packet))
-    			System.out.println("Packet Corrupted.");
+    			System.out.println("A: Packet Corrupted.");
     		else if(packet.getAcknum() == 0){ // That's what we've been waiting for.
     			stopTimer(A);
     			stateA = 2;
-    			System.out.println("Got ACK #0");
+    			System.out.println("A: Got ACK #0");
     		}
     		else if(packet.getAcknum() == 1)
-    			System.out.println("Got ACK #1. Waiting for ACK #0");
+    			System.out.println("A: Got ACK #1. Waiting for ACK #0");
     		
     	}else if(stateA == 3){
     		if(!isCorrupted(packet))
-    			System.out.println("Packet Corrupted.");
+    			System.out.println("A: Packet Corrupted.");
     		else if(packet.getAcknum() == 0)
-    			System.out.println("Got ACK #0. Waiting for ACK #1");
+    			System.out.println("A: Got ACK #0. Waiting for ACK #1");
     		else if(packet.getAcknum() == 1){
     			stopTimer(A);
     			stateA = 0;
-    			System.out.println("Got ACK #1");
+    			System.out.println("A: Got ACK #1");
     		}
     	}else{
     		// We are not waiting for ACK.
-    		System.out.println("We are not waiting for ACK.");
+    		System.out.println("A: We are not waiting for ACK.");
     	}
     }
     
@@ -195,9 +193,9 @@ public class StudentNetworkSimulator extends NetworkSimulator
     protected void aTimerInterrupt()
     {
     	// Send the last packet again and start timer.
+    	System.out.println("A: Timer interrupt.\n Packet #" +""+lastACKSent.getSeqnum() + " sending again.");
     	toLayer3(A,lastPacketSent);
     	startTimer(A, 100.0);
-    	System.out.println("Timer interrupt for A: Packet sent again.");
     }
     
     // This routine will be called once, before any of your other A-side 
@@ -216,6 +214,29 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // sent from the A-side.
     protected void bInput(Packet packet)
     {
+    	if(!isCorrupted(packet)){
+    		if(lastACKSent != null){
+    			System.out.println("B: Packet is corrupted. Sending ACK #" + ""+lastACKSent.getAcknum());
+    			toLayer3(B, lastACKSent);
+    		}
+    	}else if(packet.getSeqnum() == 0 && stateB == 0){
+    		System.out.println("B got packet #0. Sending ACK #0 to A.");
+    		toLayer5(B, packet.getPayload()); // Send packet to upper layer.
+    		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload());
+    		lastACKSent = new Packet(packet);
+    		toLayer3(B, lastACKSent);
+    		stateB = (stateB + 1) % 2;
+    	}else if(packet.getSeqnum() == 1 && stateB == 1){
+    		System.out.println("B got packet #1. Sending ACK #1 to A.");
+    		toLayer5(B, packet.getPayload());
+    		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload());
+    		lastACKSent = new Packet(packet);
+    		toLayer3(B, lastACKSent);
+    		stateB = (stateB + 1) % 2;
+    	}else{
+    		System.out.println("B sending ACK number #" + ""+lastACKSent.getAcknum());
+    		toLayer3(B, lastACKSent);
+    	}
     }
     
     // This routine will be called once, before any of your other B-side 
@@ -224,7 +245,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // of entity B).
     protected void bInit()
     {
-    	stateB=0;
+    	stateB = 0;
     }
 }
 
