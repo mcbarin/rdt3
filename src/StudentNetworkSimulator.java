@@ -86,6 +86,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
      *
      */
 	
+	// This function calculates the checksum of a message and returns checksum value.
 	public int calculateCheckum(String messageData, int seqnum, int acknum){
 		int checksum;
 		checksum = seqnum + acknum;
@@ -97,6 +98,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
 		return checksum;
 	}
 	
+	// This function checks if method is corrupted or not by checking the checksum of it.
 	public boolean isCorrupted(Packet p){
 		int checksum = calculateCheckum(p.getPayload(), p.getSeqnum(), p.getAcknum());
 		return checksum == p.getChecksum();
@@ -143,6 +145,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
 	    	
 	    	// Send packet to the network and start timer in case of a packet lost.
 	    	System.out.println("A: Packet #" + ""+packetNumber +  " Sending.\n Data: " + message.getData());
+	    	System.out.println();
 	    	toLayer3(A, p);
 	    	startTimer(A, 100.0);
 	    	stateA++;
@@ -193,7 +196,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     protected void aTimerInterrupt()
     {
     	// Send the last packet again and start timer.
-    	System.out.println("A: Timer interrupt.\n Packet #" +""+lastACKSent.getSeqnum() + " sending again.");
+    	System.out.println("A: Timer interrupt.\n Packet #" +""+lastACKSent.getSeqnum() + " sending again.\n");
     	toLayer3(A,lastPacketSent);
     	startTimer(A, 100.0);
     }
