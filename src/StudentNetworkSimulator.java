@@ -164,28 +164,28 @@ public class StudentNetworkSimulator extends NetworkSimulator
     	// Packet received from receiver.
     	if(stateA == 1){ // Waiting for ACK state
     		if(!isCorrupted(packet))
-    			System.out.println("A: Packet Corrupted.");
+    			System.out.println("A: Packet Corrupted.\n");
     		else if(packet.getAcknum() == 0){ // That's what we've been waiting for.
     			stopTimer(A);
     			stateA = 2;
-    			System.out.println("A: Got ACK #0");
+    			System.out.println("A: Got ACK #0\n");
     		}
     		else if(packet.getAcknum() == 1)
-    			System.out.println("A: Got ACK #1. Waiting for ACK #0");
+    			System.out.println("A: Got ACK #1. Waiting for ACK #0\n");
     		
     	}else if(stateA == 3){
     		if(!isCorrupted(packet))
-    			System.out.println("A: Packet Corrupted.");
+    			System.out.println("A: Packet Corrupted.\n");
     		else if(packet.getAcknum() == 0)
-    			System.out.println("A: Got ACK #0. Waiting for ACK #1");
+    			System.out.println("A: Got ACK #0. Waiting for ACK #1\n");
     		else if(packet.getAcknum() == 1){
     			stopTimer(A);
     			stateA = 0;
-    			System.out.println("A: Got ACK #1");
+    			System.out.println("A: Got ACK #1\n");
     		}
     	}else{
     		// We are not waiting for ACK.
-    		System.out.println("A: We are not waiting for ACK.");
+    		System.out.println("A: We are not waiting for ACK.\n");
     	}
     }
     
@@ -219,25 +219,27 @@ public class StudentNetworkSimulator extends NetworkSimulator
     {
     	if(!isCorrupted(packet)){
     		if(lastACKSent != null){
-    			System.out.println("B: Packet is corrupted. Sending ACK #" + ""+lastACKSent.getAcknum());
+    			System.out.println("B: Packet is corrupted. Sending ACK #" + ""+lastACKSent.getAcknum() + "\n");
     			toLayer3(B, lastACKSent);
     		}
+    		else
+    			return;
     	}else if(packet.getSeqnum() == 0 && stateB == 0){
     		System.out.println("B got packet #0. Sending ACK #0 to A.");
     		toLayer5(B, packet.getPayload()); // Send packet to upper layer.
-    		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload());
+    		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload() + "\n");
     		lastACKSent = new Packet(packet);
     		toLayer3(B, lastACKSent);
     		stateB = (stateB + 1) % 2;
     	}else if(packet.getSeqnum() == 1 && stateB == 1){
     		System.out.println("B got packet #1. Sending ACK #1 to A.");
     		toLayer5(B, packet.getPayload());
-    		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload());
+    		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload() + "\n");
     		lastACKSent = new Packet(packet);
     		toLayer3(B, lastACKSent);
     		stateB = (stateB + 1) % 2;
     	}else{
-    		System.out.println("B sending ACK number #" + ""+lastACKSent.getAcknum());
+    		System.out.println("B sending ACK number #" + ""+lastACKSent.getAcknum() + "\n");
     		toLayer3(B, lastACKSent);
     	}
     }
