@@ -97,7 +97,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
 		}
 		return checksum;
 	}
-	
+    
 	// This function checks if method is corrupted or not by checking the checksum of it.
 	public boolean isCorrupted(Packet p){
 		int checksum = calculateCheckum(p.getPayload(), p.getSeqnum(), p.getAcknum());
@@ -163,7 +163,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     {
     	// Packet received from receiver.
     	if(stateA == 1){ // Waiting for ACK state
-    		if(!isCorrupted(packet))
+    		if(!isCorrupted(packet)) // If packet is corrupted, print it.
     			System.out.println("A: Packet Corrupted.\n");
     		else if(packet.getAcknum() == 0){ // That's what we've been waiting for.
     			stopTimer(A);
@@ -173,12 +173,12 @@ public class StudentNetworkSimulator extends NetworkSimulator
     		else if(packet.getAcknum() == 1)
     			System.out.println("A: Got ACK #1. Waiting for ACK #0\n");
     		
-    	}else if(stateA == 3){
+    	}else if(stateA == 3){ // Again waiting for ACK state.
     		if(!isCorrupted(packet))
     			System.out.println("A: Packet Corrupted.\n");
     		else if(packet.getAcknum() == 0)
     			System.out.println("A: Got ACK #0. Waiting for ACK #1\n");
-    		else if(packet.getAcknum() == 1){
+    		else if(packet.getAcknum() == 1){ // That's what we've been waiting for.
     			stopTimer(A);
     			stateA = 0;
     			System.out.println("A: Got ACK #1\n");
@@ -207,7 +207,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // of entity A).
     protected void aInit()
     {
-    	stateA = 0;
+    	stateA = 0; // Initialize sender state to 0.
     	
     }
     
@@ -217,28 +217,29 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // sent from the A-side.
     protected void bInput(Packet packet)
     {
-    	if(!isCorrupted(packet)){
+    	if(!isCorrupted(packet)){ // If packet is corrupted, send the lastACKSent again.
     		if(lastACKSent != null){
     			System.out.println("B: Packet is corrupted. Sending ACK #" + ""+lastACKSent.getAcknum() + "\n");
     			toLayer3(B, lastACKSent);
     		}
     		else
-    			return;
-    	}else if(packet.getSeqnum() == 0 && stateB == 0){
+    			return; // It's the first packet, do nothing because we've got nothing to send.
+    	}else if(packet.getSeqnum() == 0 && stateB == 0){ // Correct packet received.
     		System.out.println("B got packet #0. Sending ACK #0 to A.");
     		toLayer5(B, packet.getPayload()); // Send packet to upper layer.
     		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload() + "\n");
     		lastACKSent = new Packet(packet);
-    		toLayer3(B, lastACKSent);
+    		toLayer3(B, lastACKSent); // Send ACK to sender.
     		stateB = (stateB + 1) % 2;
-    	}else if(packet.getSeqnum() == 1 && stateB == 1){
+    	}else if(packet.getSeqnum() == 1 && stateB == 1){ // Correct packet received.
     		System.out.println("B got packet #1. Sending ACK #1 to A.");
-    		toLayer5(B, packet.getPayload());
+    		toLayer5(B, packet.getPayload()); // Send packet to upper layer.
     		System.out.println("B: Packet sent to Upper Layer.\n Data: " + packet.getPayload() + "\n");
     		lastACKSent = new Packet(packet);
-    		toLayer3(B, lastACKSent);
+    		toLayer3(B, lastACKSent); // Send ACK to sender.
     		stateB = (stateB + 1) % 2;
     	}else{
+            // Wrong packet received. Send the lastACKSent to sender.
     		System.out.println("B sending ACK number #" + ""+lastACKSent.getAcknum() + "\n");
     		toLayer3(B, lastACKSent);
     	}
@@ -250,7 +251,7 @@ public class StudentNetworkSimulator extends NetworkSimulator
     // of entity B).
     protected void bInit()
     {
-    	stateB = 0;
+    	stateB = 0; // Initialize receiver state to 0.
     }
 }
 
